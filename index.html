@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ego2Robot: Scalable Robot Data Synthesis from Egocentric Human Data</title>
+<meta name="description" content="Ego2Robot converts egocentric human manipulation videos into 18,561 hours of robot training data across 15 morphologies, improving out-of-distribution generalization for VLA policies.">
+<link rel="stylesheet" href="style.css?v=5">
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <h1 class="title">Ego2Robot: Scalable Robot Data Synthesis from Egocentric Human Data</h1>
+
+    <p class="authors">
+      <b>Ye Wang<sup>1,2,∗</sup>, Pei Lin<sup>2,3,4,∗</sup>, Xiong-Hui Chen<sup>2,∗</sup>, Haoqi Yuan<sup>2</sup>, Zhixuan Liang<sup>2</sup>,</b><br>
+      <b>Yiyang Huang<sup>2</sup>, Anzhe Chen<sup>2</sup>, Zixing Lei<sup>2</sup>, Jie Zhang<sup>2</sup>, Tao Zhang<sup>1</sup>, Haoyang Li<sup>2</sup>,</b><br>
+      <b>Tong Zhang<sup>2</sup>, Chenxi Xiao<sup>3</sup>, Ziyuan Jiao<sup>4,5</sup>, Qin Jin<sup>1,†</sup></b>
+    </p>
+    <p class="affil">
+      <sup>1</sup>AIM3 Lab, Renmin University of China &nbsp;&nbsp; <sup>2</sup>Qwen Team, Alibaba Inc.<br>
+      <sup>3</sup>ShanghaiTech University &nbsp;&nbsp; <sup>4</sup>Beijing Institute for General Artificial Intelligence (BIGAI)<br>
+      <sup>5</sup>Beijing University of Aeronautics and Astronautics
+    </p>
+    <p class="note"><sup>∗</sup>Equal contribution &nbsp; <sup>†</sup>Corresponding author</p>
+
+    <div class="btns">
+      <a class="btn primary" href="#" title="Add PDF link">📄 Paper</a>
+      <a class="btn" href="#" title="Add arXiv link">🔗 arXiv</a>
+      <a class="btn" href="#video">▶ Video</a>
+    </div>
+  </div>
+</header>
+
+<!-- Video -->
+<section id="video">
+  <div class="wrap">
+    <h2><span class="idx">▶</span>Overview Video</h2>
+    <div class="videobox">
+      <video controls preload="metadata" poster="assets/fig1_ego2r_pipeline.png">
+        <source src="assets/ego2robot_video.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
+    </div>
+  </div>
+</section>
+
+<!-- Abstract -->
+<section id="abstract">
+  <div class="wrap">
+    <h2><span class="idx">§</span>Abstract</h2>
+    <p>Learning generalizable robot manipulation policies requires large-scale and diverse demonstration data. Egocentric human manipulation videos offer rich scene and task diversity, and prior work has shown that retargeting and rendering such videos into robot-format data can yield effective per-task policies at small scale. However, whether this approach can provide pretraining benefits for vision-language-action models <em>at scale</em> remains unexplored.</p>
+    <p>We present <b>Ego2Robot</b>, a scalable pipeline that converts egocentric human manipulation videos into robot training data through action retargeting, robot-arm visual synthesis, and multi-level quality curation. Ego2Robot supports both curated datasets and in-the-wild videos, producing <b>18,561 hours</b> of robot training data spanning <b>15 robot morphologies</b>, making it the largest ego-to-robot dataset to date. To evaluate generalization, we extend RoboTwin&nbsp;2.0 with disentangled perturbation axes covering visual appearance, scene layout, embodiment morphology, and task semantics. Experiments show that joint pretraining on Ego2Robot-synthesized and robot data consistently improves out-of-distribution generalization across multiple perturbation types, with benefits validated on real-robot deployment.</p>
+  </div>
+</section>
+
+<!-- Pipeline -->
+<section id="pipeline">
+  <div class="wrap">
+    <h2><span class="idx">1</span>The Ego2Robot Pipeline</h2>
+    <p class="lead">Given egocentric video of human hand manipulation, the pipeline produces embodiment-specific robot training data in three stages. It supports two input paths: <b>Path A</b> uses ego datasets with existing hand-pose annotations; <b>Path B</b> estimates hand poses from raw video (WiLoR per-frame reconstruction + DynHaMR temporal optimization), then both paths share a unified pipeline that renders any of 15 morphologies in parallel.</p>
+    <figure class="plain">
+      <img src="assets/fig1_ego2r_pipeline.png" alt="Ego2Robot pipeline overview">
+      <figcaption>Overview of the Ego2Robot pipeline: Path&nbsp;A / Path&nbsp;B inputs, then shared action alignment, visual alignment, and quality curation.</figcaption>
+    </figure>
+    <div class="cards">
+      <div class="card">
+        <div class="k">Stage 1</div>
+        <h4>Action Alignment</h4>
+        <p>Retarget hand keypoints (thumb, index/middle tips, wrist) into gripper TCP, width, and orientation; smooth with Savitzky–Golay + SLERP.</p>
+      </div>
+      <div class="card">
+        <div class="k">Stage 2</div>
+        <h4>Visual Alignment</h4>
+        <p>SAM&nbsp;3 arm segmentation → ProPainter hand removal → robot base-pose search → IK solving → depth-aware compositing into the inpainted scene.</p>
+      </div>
+      <div class="card">
+        <div class="k">Stage 3</div>
+        <h4>Quality Curation</h4>
+        <p>Three levels: <b>L1</b> pipeline-internal (IK failures, collisions, outliers), <b>L2</b> statistical (extreme values, discontinuities), <b>L3</b> VLM video–action consistency.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Data at scale -->
+<section id="data">
+  <div class="wrap">
+    <h2><span class="idx">2</span>Data at Scale</h2>
+    <p class="lead">Applied to four egocentric sources — ANT (7h, in-house), EgoDex (732h), ViTRA (249h), and EgoVerse (954h), ~1,940h total — and rendered across 15 morphologies to yield 18,561h of synthetic robot data.</p>
+    <div class="two">
+      <figure class="plain"><img src="assets/fig_data_pie.png" alt="Data source composition"><figcaption>The four egocentric sources.</figcaption></figure>
+      <figure><img src="assets/grid_15robots.png" alt="15 robot morphologies"><figcaption>The 15 supported robot morphologies.</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<!-- Evaluation framework -->
+<section id="eval">
+  <div class="wrap">
+    <h2><span class="idx">3</span>Disentangled Evaluation Framework</h2>
+    <p class="lead">Existing protocols bundle many distribution shifts into a single OOD score. We extend RoboTwin&nbsp;2.0 with <b>11 independent perturbation settings</b> plus the external <b>EBench</b> (higher-mounted camera, closer to the egocentric view), decoupling four generalization axes.</p>
+    <figure class="plain">
+      <img src="assets/fig2_benchmark.png" alt="Evaluation framework: four generalization dimensions">
+      <figcaption>12 settings across four axes. Dashed = decoupled from bundled randomization; solid = new axes; gray = external (EBench).</figcaption>
+    </figure>
+    <div class="cards four">
+      <div class="card"><div class="k">Axis 1</div><h4>Visual Appearance</h4><p>Background, lighting, and robot-color shifts.</p></div>
+      <div class="card"><div class="k">Axis 2</div><h4>Scene Layout</h4><p>Table height, distractors, and camera offset.</p></div>
+      <div class="card"><div class="k">Axis 3</div><h4>Embodiment</h4><p>Zero-shot to UR5, ARX, Franka (vs. Aloha-Agilex).</p></div>
+      <div class="card"><div class="k">Axis 4</div><h4>Task Semantics</h4><p>Unseen objects (50 tasks) and 505 paraphrased instructions.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- Results -->
+<section id="results">
+  <div class="wrap">
+    <h2><span class="idx">4</span>Main Results</h2>
+    <p class="lead">A VLA (Qwen3.5-4B backbone + Diffusion Transformer action head, 32-step camera-frame relative EEF chunks) is pretrained under four configurations (robot-only, plus Ego2R:robot at 1:3, 3:1, 1:1), finetuned on RoboTwin's 50 clean-setting tasks (Aloha-Agilex), and evaluated per perturbation. Every <b>pretraining</b> run uses identical hyperparameters (200K steps × batch 12 × 8 GPUs) and thus processes the same ~19.2M frames, so comparisons are fair regardless of dataset size.</p>
+
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th>Pretraining</th><th>Clean</th><th>Rand</th><th>Visual</th><th>Scene</th><th>Embody</th><th>Task</th><th>EBench</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Robot-only</td><td>62.2</td><td>50.9</td><td>61.4</td><td>52.9</td><td>23.8</td><td>46.2</td><td>39.6</td></tr>
+          <tr><td>Ego2R + Robot (1:3)</td><td>61.4</td><td>51.0</td><td>61.2</td><td>52.5</td><td>21.9</td><td>49.5</td><td class="gain">47.4</td></tr>
+          <tr><td>Ego2R + Robot (3:1)</td><td>64.1</td><td>49.2</td><td>62.7</td><td>54.3</td><td class="best">28.2</td><td class="gain">51.6</td><td class="best gain">51.7</td></tr>
+          <tr class="rowhi"><td><b>Ego2R + Robot (1:1)</b></td><td class="best gain">68.1</td><td class="best">53.5</td><td class="best gain">67.3</td><td class="best">56.9</td><td>27.2</td><td class="best gain">54.1</td><td class="gain">49.8</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Success rate (%) on RoboTwin&nbsp;2.0 (per-dimension) and EBench. <b style="color:var(--text)">Bold</b> = best in column; <span class="gain">green</span> = &gt;5% gain vs. Robot-only.</p>
+
+    <h3>Per-perturbation breakdown</h3>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th>Pretraining</th><th>BG</th><th>Light</th><th>Color</th><th>Height</th><th>Clutter</th><th>Camera</th><th>ARX</th><th>UR5</th><th>Franka</th><th>Obj</th><th>Lang</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Robot-only</td><td>66.6</td><td>58.2</td><td>59.4</td><td>60.1</td><td>48.3</td><td>50.4</td><td>44.1</td><td>20.2</td><td>7.0</td><td>29.3</td><td>63.1</td></tr>
+          <tr><td>Ego2R+Robot (1:3)</td><td>65.0</td><td>58.3</td><td>60.3</td><td>58.6</td><td>49.3</td><td>49.6</td><td>43.7</td><td>17.6</td><td>4.5</td><td class="gain">36.8</td><td>62.2</td></tr>
+          <tr><td>Ego2R+Robot (3:1)</td><td>65.5</td><td>60.9</td><td>61.8</td><td>62.0</td><td>49.2</td><td>51.6</td><td>47.6</td><td class="best gain">31.4</td><td>5.6</td><td class="best gain">40.0</td><td>63.1</td></tr>
+          <tr class="rowhi"><td><b>Ego2R+Robot (1:1)</b></td><td class="best">70.3</td><td class="best gain">65.8</td><td class="best gain">65.8</td><td class="best">62.4</td><td class="best">52.0</td><td class="best gain">56.3</td><td class="best gain">51.2</td><td>25.0</td><td>5.3</td><td class="gain">39.6</td><td class="best gain">68.5</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Per-perturbation breakdown (%). Columns: Visual (BG, Light, Color), Scene (Height, Clutter, Camera), Embodiment (ARX, UR5, Franka), Task (Obj, Lang). <b style="color:var(--text)">Bold</b> = best in column; <span class="gain">green</span> = &gt;5% gain vs. Robot-only.</p>
+
+    <ul class="findings">
+      <li><b>Co-training improves OOD generalization.</b> <span>Ego2R+Robot (1:1) leads in five of seven columns — 53.5% on RoboTwin Randomized (+2.6) while keeping 68.1% Clean (+5.9).</span></li>
+      <li><b>Visual appearance benefits most.</b> <span>At 1:1: background +4, lighting +8 (scene diversity in ego video), robot color +6 (multi-morphology rendering).</span></li>
+      <li><b>Scene layout shows moderate gains.</b> <span>Camera-offset robustness improves +6 at 1:1, as ego videos naturally exhibit diverse head poses and viewpoints.</span></li>
+      <li><b>Embodiment transfer benefits from multi-morphology data.</b> <span>ARX 44→51 (1:1); UR5 peaks at 31 (3:1). Franka stays below 7% — large kinematic gap.</span></li>
+      <li><b>Task semantics improve consistently.</b> <span>Unseen-object 29%→40% (+11 at 3:1); paraphrased-instruction robustness reaches 69% at 1:1.</span></li>
+      <li><b>EBench confirms gains under higher viewpoint.</b> <span>3:1 reaches 51.7 (+12.1) — benefits amplified when the camera bias partially matches the egocentric view.</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- Ablation -->
+<section id="ablation">
+  <div class="wrap">
+    <h2><span class="idx">5</span>Ablations: Pipeline Value &amp; Morphology Scaling</h2>
+    <p class="lead">Ego-only pretraining (no robot data) isolates the pipeline's contribution. Training on raw ego alone reaches only 28.1% on RoboTwin Randomized; processing through the pipeline (single morphology) lifts it to 31.7% (+3.6). Scaling 1→15 morphologies improves to 33.5%, and adding raw ego alongside 15-morphology data jumps to 37.3% — raw ego acts as a 16th "morphology".</p>
+    <figure class="half"><img src="assets/fig4_ablation.png" alt="Pipeline value and morphology scaling ablation"><figcaption>Success rate on RoboTwin Randomized under ego-only pretraining.</figcaption></figure>
+  </div>
+</section>
+
+<!-- Real robot -->
+<section id="real">
+  <div class="wrap">
+    <h2><span class="idx">6</span>Real-Robot Experiments</h2>
+    <p class="lead">On an ARX ACone platform across five long-horizon tasks, in a <b>few-shot regime of only 20 teleoperated demonstrations per task</b>, we compare Robot-only, Mix (Ego2R+Robot 1:1 pretraining), and Mix + Ego2R Play (same pretraining, but with pipeline-converted <b>ego-play</b> demonstrations mixed into the finetuning data — synthesized from casual first-person recordings of hand manipulation in the scene, ~10 min each). Mix + Ego2R Play is best on all five tasks.</p>
+    <figure><img src="assets/fig_ego2r_realplay_gallery.png" alt="Ego2Robot real-play synthesis gallery"><figcaption>Ego play videos converted into ACone-specific synthetic demonstrations.</figcaption></figure>
+    <figure><img src="assets/fig5_bar.png" alt="Real robot success rates across five tasks"><figcaption>Success rates (%) on five tasks on the ARX ACone platform.</figcaption></figure>
+    <figure class="plain"><img src="assets/fig6_rollout.png" alt="Real robot rollout key frames"><figcaption>Key frames from the five real-robot evaluation tasks.</figcaption></figure>
+  </div>
+</section>
+
+</body>
+</html>
